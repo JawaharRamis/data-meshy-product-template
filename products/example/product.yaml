@@ -1,0 +1,57 @@
+schema_version: 1
+
+product:
+  name: example_product
+  domain: REPLACE_ME
+  description: "Short description of the data product."
+  owner: team@example.com
+  contact_channel: "#data-mesh-slack"
+
+sla:
+  refresh_frequency: daily
+  freshness_target: "24 hours"
+  availability: "99.9%"
+
+classification: internal
+
+schema:
+  format: iceberg
+  columns:
+    - name: id
+      type: string
+      description: "Primary identifier"
+      pii: false
+      nullable: false
+    - name: created_at
+      type: timestamp
+      description: "Record creation timestamp"
+      pii: false
+      nullable: false
+    - name: date
+      type: date
+      description: "Partition date"
+      pii: false
+      nullable: false
+  partition_by:
+    - column: date
+      transform: identity
+
+quality:
+  rules:
+    - name: id_completeness
+      rule: "IsComplete 'id'"
+      threshold: 1.0
+    - name: created_at_completeness
+      rule: "IsComplete 'created_at'"
+      threshold: 1.0
+  minimum_quality_score: 95
+
+tags:
+  - example
+  - REPLACE_ME
+
+lineage:
+  pipeline_type: glue_step_functions
+  sources:
+    - system: REPLACE_ME
+      table: schema.table_name
