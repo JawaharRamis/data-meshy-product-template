@@ -1,0 +1,31 @@
+name: Deprecate Data Product
+
+on:
+  workflow_dispatch:
+    inputs:
+      product_name:
+        description: "Name of the product to deprecate (snake_case)"
+        type: string
+        required: true
+      sunset_date:
+        description: "ISO date when the product will be retired (YYYY-MM-DD)"
+        type: string
+        required: true
+      reason:
+        description: "Reason for deprecation"
+        type: string
+        required: false
+        default: ""
+
+jobs:
+  deprecate:
+    uses: JawaharRamis/data-meshy/.github/workflows/deprecate-product.yml@main
+    with:
+      product_name: ${{ inputs.product_name }}
+      sunset_date: ${{ inputs.sunset_date }}
+      reason: ${{ inputs.reason }}
+      aws_region: ${{ vars.AWS_REGION }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      MESH_API_ENDPOINT: ${{ secrets.MESH_API_ENDPOINT }}
+      MESH_DOMAIN_NAME: ${{ secrets.MESH_DOMAIN_NAME }}
