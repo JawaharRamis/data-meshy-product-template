@@ -1,0 +1,19 @@
+name: Provision Data Product
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "products/**"
+
+jobs:
+  provision:
+    uses: JawaharRamis/data-meshy/.github/workflows/provision-product.yml@main
+    with:
+      product_dir: "products/"
+      aws_region: ${{ vars.AWS_REGION }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      MESH_API_ENDPOINT: ${{ secrets.MESH_API_ENDPOINT }}
+      MESH_DOMAIN_NAME: ${{ secrets.MESH_DOMAIN_NAME }}
