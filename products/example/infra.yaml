@@ -1,0 +1,15 @@
+platform_version: REPLACE_ME
+
+glue:
+  dpu: 2
+  schedule: "cron(0 3 * * ? *)"
+  worker_type: G.1X
+
+iceberg:
+  partition_keys:
+    - date
+  compaction: true
+  retention_days: 730
+
+s3:
+  source_prefix: s3://REPLACE_ME/
