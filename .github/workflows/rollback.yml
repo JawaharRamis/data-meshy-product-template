@@ -1,0 +1,26 @@
+name: Rollback Data Product
+
+on:
+  workflow_dispatch:
+    inputs:
+      product_name:
+        description: "Name of the product to roll back (snake_case)"
+        type: string
+        required: true
+      snapshot_id:
+        description: "Iceberg snapshot ID to restore (leave blank for previous snapshot)"
+        type: string
+        required: false
+        default: ""
+
+jobs:
+  rollback:
+    uses: JawaharRamis/data-meshy/.github/workflows/rollback-product.yml@main
+    with:
+      product_name: ${{ inputs.product_name }}
+      snapshot_id: ${{ inputs.snapshot_id }}
+      aws_region: ${{ vars.AWS_REGION }}
+    secrets:
+      AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
+      MESH_API_ENDPOINT: ${{ secrets.MESH_API_ENDPOINT }}
+      MESH_DOMAIN_NAME: ${{ secrets.MESH_DOMAIN_NAME }}
