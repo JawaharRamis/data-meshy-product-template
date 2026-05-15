@@ -1,0 +1,92 @@
+name: Upgrade Platform Version
+
+# Run this workflow when a new platform version is available.
+# It bumps platform_version in all products/*/infra.yaml and the @vX.Y ref
+# in all platform-calling workflows, then opens a PR for your team to review.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_version:
+        description: "Target platform version to upgrade to (e.g. v1.3)"
+        type: string
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create upgrade branch
+        run: |
+          BRANCH="chore/platform-upgrade-${{ inputs.target_version }}"
+          git checkout -b "${BRANCH}"
+          echo "UPGRADE_BRANCH=${BRANCH}" >> "${GITHUB_ENV}"
+
+      - name: Bump platform_version in all infra.yaml files
+        run: |
+          TARGET="${{ inputs.target_version }}"
+          find products/ -name "infra.yaml" | while read -r f; do
+            sed -i "s|^platform_version:.*|platform_version: ${TARGET}|" "${f}"
+            echo "Updated platform_version in ${f}"
+          done
+
+      - name: Bump @vX.Y refs in all platform-calling workflow files
+        run: |
+          TARGET="${{ inputs.target_version }}"
+          find .github/workflows/ -name "*.yml" | while read -r f; do
+            sed -i "s|@v[0-9][0-9.]*|@${TARGET}|g" "${f}"
+            echo "Updated workflow refs in ${f}"
+          done
+
+      - name: Commit changes
+        run: |
+          git add products/ .github/workflows/
+          git diff --staged --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: upgrade platform to ${{ inputs.target_version }}"
+
+      - name: Push upgrade branch
+        run: |
+          git push origin "${UPGRADE_BRANCH}"
+
+      - name: Open PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TARGET="${{ inputs.target_version }}"
+          gh pr create \
+            --title "chore: upgrade to platform ${TARGET}" \
+            --body "$(cat <<EOF
+          ## Platform upgrade to ${TARGET}
+
+          This PR was opened automatically by \`upgrade-platform.yml\`.
+
+          ### Changes
+          - Bumped \`platform_version\` in all \`products/*/infra.yaml\` to \`${TARGET}\`
+          - Updated \`@vX.Y\` refs in all platform-calling workflow files to \`@${TARGET}\`
+
+          ### Release notes
+          See https://github.com/JawaharRamis/data-meshy/releases/tag/${TARGET} for the full changelog.
+
+          ### Next steps
+          1. Review the diff below.
+          2. Merge when your team is ready to adopt ${TARGET}.
+          3. The \`on-push.yml\` workflow will provision your products with the new platform version on merge.
+          EOF
+          )" \
+            --base main \
+            --head "${UPGRADE_BRANCH}"
