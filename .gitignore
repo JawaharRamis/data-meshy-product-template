@@ -1,0 +1,18 @@
+# Claude Code (local only — not for domain teams)
+.claude/
+CLAUDE.md
+CHANGELOG.md
+
+# Plans (local only)
+plan/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
